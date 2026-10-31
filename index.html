@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>Asil Blackjack</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Gerçek kumarhane kurallarıyla, siyah ve altın temalı tek kişilik Blackjack.">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Blackjack">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="suit-S" viewBox="0 0 100 100"><path d="M50 4C38 24 12 38 12 60c0 13 10 21 21 21 6 0 11-2 14-6-1 8-4 14-10 21h26c-6-7-9-13-10-21 3 4 8 6 14 6 11 0 21-8 21-21C88 38 62 24 50 4z"/></symbol>
+    <symbol id="suit-H" viewBox="0 0 100 100"><path d="M50 94C38 80 6 58 6 32 6 17 18 7 30 7c9 0 16 5 20 13 4-8 11-13 20-13 12 0 24 10 24 25 0 26-32 48-44 62z"/></symbol>
+    <symbol id="suit-D" viewBox="0 0 100 100"><path d="M50 3c10 17 23 33 36 47C73 64 60 80 50 97 40 80 27 64 14 50 27 36 40 20 50 3z"/></symbol>
+    <symbol id="suit-C" viewBox="0 0 100 100"><path d="M50 5c-13 0-22 10-22 21 0 6 2 11 6 15-3-1-6-2-9-2-12 0-21 10-21 21s9 21 21 21c8 0 15-4 19-11-1 9-4 16-10 26h32c-6-10-9-17-10-26 4 7 11 11 19 11 12 0 21-10 21-21s-9-21-21-21c-3 0-6 1-9 2 4-4 6-9 6-15C72 15 63 5 50 5z"/></symbol>
+  </svg>
+
+  <canvas id="dust" aria-hidden="true"></canvas>
+
+  <div id="app">
+    <!-- AÇILIŞ -->
+    <section class="screen" id="screen-menu" aria-label="Ana menü">
+      <div class="logo">
+        <span class="logo-rule"></span>
+        <span class="logo-21">21</span>
+        <span class="logo-name">BLACKJACK</span>
+        <span class="logo-tag">ÖZEL SALON</span>
+        <span class="logo-rule"></span>
+      </div>
+      <nav class="menu">
+        <button class="btn btn-primary" data-nav="table" id="btn-play">Oyna</button>
+        <button class="btn" data-nav="stats">İstatistikler</button>
+        <button class="btn" data-nav="settings">Ayarlar</button>
+        <button class="btn" data-nav="how">Nasıl Oynanır</button>
+      </nav>
+      <p class="menu-note">Yalnızca eğlence içindir. Gerçek para kullanılmaz.</p>
+    </section>
+
+    <!-- OYUN MASASI -->
+    <section class="screen" id="screen-table" aria-label="Oyun masası">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-menu" aria-label="Menü">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+        </button>
+        <div class="balance">
+          <span class="balance-label">BAKİYE</span>
+          <span class="balance-value" id="balance" aria-live="polite">5.000</span>
+        </div>
+        <div class="shoe-meter" aria-hidden="true"><span id="shoe-fill"></span></div>
+      </header>
+
+      <div class="table" id="table">
+        <div class="felt" aria-hidden="true">
+          <svg viewBox="0 0 400 110" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <path id="arc-main" d="M 34 18 Q 200 92 366 18"/>
+              <path id="arc-sub" d="M 66 44 Q 200 106 334 44"/>
+            </defs>
+            <path d="M 14 12 Q 200 104 386 12" class="felt-line"/>
+            <path d="M 56 54 Q 200 122 344 54" class="felt-line thin"/>
+            <text class="felt-text"><textPath href="#arc-main" startOffset="50%" text-anchor="middle">BLACKJACK PAYS 3 TO 2</textPath></text>
+            <text class="felt-sub"><textPath href="#arc-sub" startOffset="50%" text-anchor="middle">KRUPİYE SOFT 17'DE DURUR · SİGORTA 2:1</textPath></text>
+          </svg>
+        </div>
+
+        <div class="shoe" id="shoe" aria-hidden="true"><i></i><i></i><i></i></div>
+
+        <div class="zone" id="dealer-zone">
+          <span class="zone-label">KRUPİYE</span>
+          <span class="total" id="dealer-total" hidden></span>
+        </div>
+        <div class="spacer"></div>
+        <div class="zone" id="player-zone">
+          <div class="bet-spot" id="bet-spot"><span id="bet-hint">BAHİS</span></div>
+        </div>
+
+        <div class="layer" id="layer"></div>
+        <div class="banner" id="banner" role="status"><strong></strong><span></span></div>
+        <div class="toast" id="toast" role="status"></div>
+        <div class="shuffle-stage" id="shuffle-stage" aria-hidden="true"></div>
+        <div class="probe card" id="card-probe" aria-hidden="true"></div>
+      </div>
+
+      <footer class="controls">
+        <!-- Bahis -->
+        <div class="panel" id="panel-bet">
+          <div class="chips" id="chips"></div>
+          <div class="row">
+            <button class="btn btn-sm" id="btn-clear">Temizle</button>
+            <button class="btn btn-sm" id="btn-rebet">Önceki Bahis</button>
+            <button class="btn btn-sm btn-primary" id="btn-deal">Dağıt</button>
+          </div>
+        </div>
+        <!-- Hamleler -->
+        <div class="panel" id="panel-play">
+          <div class="row row-main">
+            <button class="btn btn-action" data-move="hit">Kart</button>
+            <button class="btn btn-action" data-move="stand">Dur</button>
+          </div>
+          <div class="row">
+            <button class="btn btn-sm" data-move="double">Double</button>
+            <button class="btn btn-sm" data-move="split">Split</button>
+            <button class="btn btn-sm" data-move="surrender">Teslim</button>
+            <button class="btn btn-sm btn-hint" data-hint="play">İpucu</button>
+          </div>
+        </div>
+        <!-- Sigorta -->
+        <div class="panel" id="panel-insurance">
+          <p class="panel-text" id="insurance-text"></p>
+          <div class="row">
+            <button class="btn btn-sm btn-hint" data-hint="insurance">İpucu</button>
+            <button class="btn" id="btn-ins-no">Hayır</button>
+            <button class="btn btn-primary" id="btn-ins-yes">Sigorta</button>
+          </div>
+        </div>
+        <!-- Sonuç -->
+        <div class="panel" id="panel-result">
+          <div class="row row-main">
+            <button class="btn btn-action" id="btn-next">Yeni El</button>
+            <button class="btn btn-action btn-primary" id="btn-repeat">Tekrarla</button>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+    <!-- İSTATİSTİK -->
+    <section class="screen page" id="screen-stats" aria-label="İstatistikler">
+      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>İstatistikler</h1></header>
+      <div class="page-body" id="stats-body"></div>
+    </section>
+
+    <!-- AYARLAR -->
+    <section class="screen page" id="screen-settings" aria-label="Ayarlar">
+      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>Ayarlar</h1></header>
+      <div class="page-body">
+        <label class="setting"><span>Ses</span><input type="checkbox" class="switch" id="set-sound"></label>
+        <label class="setting"><span>Titreşim</span><input type="checkbox" class="switch" id="set-vibration"></label>
+        <label class="setting"><span>İpucu</span><input type="checkbox" class="switch" id="set-hints"></label>
+        <div class="setting">
+          <span>Animasyon hızı</span>
+          <div class="segment" role="group" aria-label="Animasyon hızı">
+            <button data-speed="normal">Normal</button>
+            <button data-speed="fast">Hızlı</button>
+          </div>
+        </div>
+        <p class="page-note">Sistemde "hareketi azalt" açıksa animasyonlar kısaltılır.</p>
+      </div>
+    </section>
+
+    <!-- NASIL OYNANIR -->
+    <section class="screen page" id="screen-how" aria-label="Nasıl Oynanır">
+      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>Nasıl Oynanır</h1></header>
+      <div class="page-body prose">
+        <h2>Amaç</h2>
+        <p>Toplamı 21'i geçmeden krupiyeden yüksek olmak. 21'i geçen el <b>bust</b> olur ve hemen kaybeder.</p>
+        <h2>Kart değerleri</h2>
+        <p>2–10 kendi değerinde, J, Q, K 10 değerindedir. As 11 sayılır; el 21'i geçerse 1 sayılır. Asın 11 sayıldığı ele <b>soft</b> denir.</p>
+        <h2>Ödemeler</h2>
+        <ul>
+          <li><b>Blackjack</b> (ilk iki kart As + 10 değerli): 3:2</li>
+          <li><b>Kazanç:</b> 1:1</li>
+          <li><b>Beraberlik:</b> bahis iade edilir</li>
+          <li><b>Sigorta:</b> 2:1</li>
+        </ul>
+        <h2>Hamleler</h2>
+        <ul>
+          <li><b>Kart:</b> bir kart daha çek.</li>
+          <li><b>Dur:</b> eli bırak.</li>
+          <li><b>Double:</b> ilk iki kartta bahsi ikiye katla, tek kart al ve dur.</li>
+          <li><b>Split:</b> aynı değerli iki kartı eşit bahisle ayır. En fazla 4 el. Split sonrası double serbesttir. Split Asların her birine tek kart verilir. Split sonrası 21 blackjack sayılmaz.</li>
+          <li><b>Teslim:</b> ilk iki kartta eli bırak, bahsin yarısı geri gelir. Split sonrası yapılamaz.</li>
+        </ul>
+        <h2>Krupiye</h2>
+        <p>Krupiyenin bir kartı açık, biri kapalıdır. Açık kart As veya 10 değerliyse blackjack kontrolü yapar. 16 ve altında çeker, soft 17 dahil 17 ve üstünde durur.</p>
+        <h2>Sigorta</h2>
+        <p>Açık kart As ise bahsin yarısıyla sigorta alabilirsin; krupiyede blackjack varsa 2:1 öder. Elinde blackjack varken sigorta <b>eşit para</b> demektir: krupiye ne açarsa açsın bahsin bir katını kazanırsın.</p>
+        <h2>Ayakkabı</h2>
+        <p>6 deste kullanılır. Kesme kartı yaklaşık %75'te çıkar, o el bitince ayakkabı yeniden karıştırılır.</p>
+      </div>
+    </section>
+  </div>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="edge-glow" id="edge-glow" aria-hidden="true"></div>
+
+  <div class="dialog" id="dialog-broke" role="alertdialog" aria-labelledby="broke-title">
+    <div class="dialog-box">
+      <h2 id="broke-title">Bakiyen Bitti</h2>
+      <p>Salon sana yeni bir başlangıç sunuyor. İstatistiklerin korunur.</p>
+      <button class="btn btn-primary" id="btn-restart">Yeniden Başla</button>
+    </div>
+  </div>
+
+  <div class="rotate-note">Lütfen telefonu dik tut</div>
+
+  <script>
+    // Tarayıcılar file:// üzerinde ES modül yüklemez. Çift tıklayarak açılınca
+    // aynı kodun tools/bundle-file.mjs ile üretilen tek dosya hâli kullanılır.
+    (function () {
+      var script = document.createElement('script');
+      if (location.protocol === 'file:') {
+        script.src = 'js/app.file.js';
+      } else {
+        script.type = 'module';
+        script.src = 'js/ui.js';
+      }
+      document.body.appendChild(script);
+    })();
+  </script>
+</body>
+</html>

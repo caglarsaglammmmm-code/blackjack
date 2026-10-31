@@ -1,0 +1,9 @@
+# Unity şablon klasörleri web oyununun parçası değil
+Assets/
+Library/
+Logs/
+Packages/
+ProjectSettings/
+Temp/
+UserSettings/
+node_modules/
