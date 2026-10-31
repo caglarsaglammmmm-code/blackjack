@@ -10,7 +10,6 @@ export const scaled = (ms) => (reducedMotion() ? 0 : ms * speedFactor);
 export const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, scaled(ms)); });
 
 export const EASE_OUT = 'cubic-bezier(.22,.8,.24,1)';
-const EASE_LAND = 'cubic-bezier(.18,.9,.3,1.08)';
 
 export function run(el, keyframes, ms, options = {}) {
   const duration = scaled(ms);
@@ -28,18 +27,30 @@ export function moveTo(el, transform, ms, options = {}) {
   return run(el, [{ transform: from }, { transform }], ms, options);
 }
 
-export function flip(inner, ms = 420) {
+// Kart ayakkabıdan kayar, hedefi az geçer, dönerek toparlanır ve küçük bir sekmeyle oturur.
+export function dealIn(el, from, to, ms = 470) {
+  el.style.transform = to;
+  return run(el, [
+    { transform: from, opacity: 0.85, easing: 'cubic-bezier(.2,.7,.3,1)' },
+    { transform: `translate(0,7px) rotate(4deg) ${to}`, opacity: 1, offset: 0.68, easing: 'ease-out' },
+    { transform: `translate(0,-9px) rotate(-1.2deg) ${to}`, offset: 0.85, easing: 'ease-in' },
+    { transform: to },
+  ], ms, { easing: 'linear' });
+}
+
+export function flip(inner, ms = 540) {
   inner.style.transform = 'rotateY(0deg)';
   return run(inner, [
     { transform: 'rotateY(180deg) scale(1)' },
-    { transform: 'rotateY(90deg) scale(1.08)', offset: 0.5 },
+    { transform: 'rotateY(90deg) scale(1.16) rotateZ(-2deg)', offset: 0.5 },
+    { transform: 'rotateY(-10deg) scale(1.05)', offset: 0.8 },
     { transform: 'rotateY(0deg) scale(1)' },
   ], ms, { easing: 'ease-in-out' });
 }
 
 // Ayrı scale özelliği, rozetin konum transform'una dokunmaz.
 export function tick(el) {
-  return run(el, [{ scale: 0.8, opacity: 0.4 }, { scale: 1.12, offset: 0.6 }, { scale: 1, opacity: 1 }], 260);
+  return run(el, [{ scale: 0.7, opacity: 0.3 }, { scale: 1.22, offset: 0.6 }, { scale: 1, opacity: 1 }], 320);
 }
 
 export function shake(el) {
@@ -52,16 +63,37 @@ export function shake(el) {
 export function wobble(el) {
   const base = el.style.transform || 'translate(0,0)';
   return run(el, [
-    { transform: `${base} rotate(0deg)` },
-    { transform: `${base} rotate(-3deg)` },
-    { transform: `${base} rotate(2deg)` },
-    { transform: `${base} rotate(-1deg)` },
-    { transform: `${base} rotate(0deg)` },
-  ], 300);
+    { transform: `${base} rotate(0deg)`, scale: '1 1' },
+    { transform: `${base} rotate(-4deg)`, scale: '1.14 .86', offset: 0.22 },
+    { transform: `${base} rotate(3deg)`, scale: '.95 1.08', offset: 0.5 },
+    { transform: `${base} rotate(-1deg)`, scale: '1.02 .98', offset: 0.76 },
+    { transform: `${base} rotate(0deg)`, scale: '1 1' },
+  ], 380);
 }
 
+// Basılan yerden yayılan altın halka ve küçük esneme.
+export function pressEffect(button, x, y) {
+  run(button, [{ scale: 1 }, { scale: 0.94, offset: 0.35 }, { scale: 1.03, offset: 0.72 }, { scale: 1 }], 260);
+  if (reducedMotion()) return;
+  const ring = document.createElement('span');
+  ring.className = 'btn-ring';
+  ring.style.setProperty('--x', `${x}px`);
+  ring.style.setProperty('--y', `${y}px`);
+  button.appendChild(ring);
+  run(ring, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(26)', opacity: 0 }], 520).then(() => ring.remove());
+}
+
+// Bakiye değişirken sayı nefes alır.
+export function pulseNumber(el) {
+  return run(el, [{ scale: 1 }, { scale: 1.2, offset: 0.3 }, { scale: 1 }], 620);
+}
+
+// Kazanan kartlar zıplar, kaybedenler aşağı çöker.
+export const liftCard = (el, delay) => run(el, [{ translate: '0 0' }, { translate: '0 -14px', offset: 0.45 }, { translate: '0 2px', offset: 0.78 }, { translate: '0 0' }], 520, { delay });
+export const sinkCard = (el) => run(el, [{ translate: '0 0' }, { translate: '0 7px', offset: 0.5 }, { translate: '0 0' }], 460);
+
 // Sayıyı akıcı biçimde hedefe götürür.
-export function countTo(el, from, to, format, ms = 620) {
+export function countTo(el, from, to, format, ms = 860) {
   const duration = scaled(ms);
   if (duration <= 0 || from === to) {
     el.textContent = format(to);
@@ -90,7 +122,7 @@ export function showBanner(el, { title, detail, big = false, bad = false, hold =
       { opacity: 1, transform: 'scale(1)', offset: 0.8 },
       { opacity: 0, transform: 'scale(1.02)' },
     ]
-    : [{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'scale(1)' }];
+    : [{ opacity: 0, transform: 'scale(.66)' }, { opacity: 1, transform: 'scale(1.09)', offset: 0.62 }, { opacity: 1, transform: 'scale(1)' }];
   if (reducedMotion()) {
     if (hold) {
       el.style.opacity = '1';
@@ -98,7 +130,7 @@ export function showBanner(el, { title, detail, big = false, bad = false, hold =
     }
     return Promise.resolve();
   }
-  return run(el, keyframes, hold || 420);
+  return run(el, keyframes, hold || 540);
 }
 
 export function hideBanner(el) {
@@ -135,9 +167,6 @@ export function hideToast(el) {
   el.style.opacity = '0';
 }
 
-// Kartın yere otururken kullandığı yumuşak iniş.
-export const landing = { easing: EASE_LAND };
-
 // Altın parçacıklar. Arka plan tozu tek kanvasta, kıvılcımlar üst kanvasta.
 export class GoldParticles {
   constructor(dustCanvas, fxCanvas) {
@@ -156,7 +185,7 @@ export class GoldParticles {
       if (document.hidden) this.running = false;
       else this.start();
     });
-    for (let i = 0; i < 24; i += 1) this.motes.push(this.mote(true));
+    this.setDensity(24);
     this.start();
   }
 
@@ -171,6 +200,12 @@ export class GoldParticles {
     this.dustCtx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
     this.fxCtx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
     if (reducedMotion()) this.drawDust(0);
+  }
+
+  // Açılış ekranında daha yoğun, masada daha seyrek toz.
+  setDensity(count) {
+    while (this.motes.length < count) this.motes.push(this.mote(true));
+    this.motes.length = count;
   }
 
   mote(anywhere) {

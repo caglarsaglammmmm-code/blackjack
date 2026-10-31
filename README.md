@@ -45,6 +45,17 @@ Windows güvenlik duvarı sorarsa Node.js için özel ağ iznini verin.
 
 İlk açılıştan sonra internet olmadan da çalışır. Dosyaları güncellerseniz `sw.js` içindeki `CACHE` sürümünü artırın, yoksa telefonlar eski kopyayı kullanmaya devam eder.
 
+## Android APK
+
+Oyun Capacitor ile Android uygulaması olarak da paketlenir. Gereksinimler JDK 21 ve Android SDK 36'dır; `JAVA_HOME` ve `ANDROID_HOME` tanımlı değilse `%LOCALAPPDATA%\Android\jdk-21` ve `%LOCALAPPDATA%\Android\Sdk` kullanılır.
+
+```
+npm install
+npm run android:build
+```
+
+Sonuç `dist/AsilBlackjack-debug.apk` dosyasıdır. Debug imzalıdır: telefona kurulabilir, Google Play'e yüklenemez. Kurmak için dosyayı telefona atıp açın ve bilinmeyen kaynaktan yükleme iznini verin.
+
 ## Kurallar
 
 | Kural | Değer |
@@ -82,7 +93,7 @@ js/storage.js      localStorage, istatistik
 js/app.file.js     Üretilmiş dosya, file:// için
 tests/             Birim testleri
 tools/             Yerel sunucu ve file:// paketleyici
-fonts/             Cinzel ve Inter (SIL OFL)
+fonts/             Cinzel, Playfair Display ve Inter (SIL OFL)
 manifest.json, sw.js, icons/   PWA
 ```
 

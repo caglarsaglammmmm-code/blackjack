@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Asil Blackjack</string>
+    <string name="title_activity_main">Asil Blackjack</string>
+    <string name="package_name">com.asil.blackjack</string>
+    <string name="custom_url_scheme">com.asil.blackjack</string>
+</resources>

@@ -1,5 +1,5 @@
 // Çevrimdışı oyun için önbellek. Dosya değişince CACHE sürümünü artırın.
-const CACHE = 'asil-blackjack-v1';
+const CACHE = 'asil-blackjack-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -18,6 +18,8 @@ const ASSETS = [
   'fonts/cinzel-latin-700-normal.woff2',
   'fonts/cinzel-latin-ext-400-normal.woff2',
   'fonts/cinzel-latin-ext-700-normal.woff2',
+  'fonts/playfair-display-latin-400-italic.woff2',
+  'fonts/playfair-display-latin-ext-400-italic.woff2',
   'fonts/inter-latin-400-normal.woff2',
   'fonts/inter-latin-600-normal.woff2',
   'fonts/inter-latin-ext-400-normal.woff2',

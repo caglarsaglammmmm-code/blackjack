@@ -1,0 +1,15 @@
+{
+  "appId": "com.asil.blackjack",
+  "appName": "Asil Blackjack",
+  "webDir": "www",
+  "backgroundColor": "#000000",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

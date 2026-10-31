@@ -7,3 +7,7 @@ ProjectSettings/
 Temp/
 UserSettings/
 node_modules/
+
+# Capacitor üretimleri
+www/
+dist/

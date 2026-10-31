@@ -6,7 +6,7 @@ import { BlackjackGame, RULES, handValue } from './game.js';
 import { recommend } from './strategy.js';
 import { applyResults, loadProgress, saveProgress } from './storage.js';
 import { SoundBoard } from './audio.js';
-import { GoldParticles, countTo, flip, hideBanner, hideToast, landing, moveTo, pulseGlow, run, setAnimationSpeed, shake, showBanner, showToast, tick, wait, wobble } from './animations.js';
+import { GoldParticles, countTo, dealIn, flip, hideBanner, hideToast, liftCard, moveTo, pressEffect, pulseGlow, pulseNumber, run, setAnimationSpeed, shake, showBanner, showToast, sinkCard, tick, wait, wobble } from './animations.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -121,6 +121,7 @@ class App {
     this.stats = progress.stats;
     this.settings = progress.settings;
     this.lastBet = progress.lastBet;
+    this.returnTo = 'menu';
     this.sound = new SoundBoard();
     this.game = new BlackjackGame({ state: progress.game });
     this.pendingBet = 0;
@@ -154,11 +155,25 @@ class App {
     this.go('menu');
     this.renderSavedRound();
     this.setBalance(this.game.balance, false);
-    this.updateShoeMeter();
     this.refreshControls();
-    this.checkBroke();
     this.refreshPlayLabel();
     addEventListener('resize', () => this.layoutAll(0));
+    this.playIntro();
+  }
+
+  // İmza her açılışta gösterilir. Süre okunabilsin diye animasyon hızına bağlı değildir.
+  async playIntro() {
+    const intro = $('#intro');
+    const menu = $('#screen-menu');
+    const font = document.fonts ? document.fonts.load('italic 400 28px "Playfair Display"', 'Çağlar') : null;
+    await Promise.race([font, new Promise((done) => { setTimeout(done, 500); })]).catch(() => {});
+    intro.classList.add('play');
+    await new Promise((done) => { setTimeout(done, 3300); });
+    intro.classList.add('out');
+    menu.classList.remove('pre');
+    menu.classList.add('enter');
+    this.checkBroke();
+    setTimeout(() => intro.remove(), 950);
   }
 
   renderSavedRound() {
@@ -193,7 +208,7 @@ class App {
   }
 
   refreshPlayLabel() {
-    $('#btn-play').textContent = this.game.phase === 'betting' ? 'Oyna' : 'Devam Et';
+    $('#btn-play-label').textContent = this.game.phase === 'betting' ? 'Oyna' : 'Devam Et';
   }
 
   /* ---------- Bağlantılar ---------- */
@@ -210,17 +225,46 @@ class App {
       lastTouch = now;
     }, { passive: false });
 
+    document.addEventListener('pointerdown', (event) => {
+      const button = event.target.closest('.btn:not(:disabled)');
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      pressEffect(button, event.clientX - rect.left, event.clientY - rect.top);
+    });
+
     for (const button of $$('[data-nav]')) {
       button.addEventListener('click', () => {
         this.sound.tap();
+        this.returnTo = 'menu';
         this.go(button.dataset.nav);
       });
     }
-    $('#btn-menu').addEventListener('click', () => {
-      this.sound.tap();
+    for (const button of $$('[data-back]')) {
+      button.addEventListener('click', () => {
+        this.sound.tap();
+        this.go(this.returnTo);
+      });
+    }
+    $('#btn-menu').addEventListener('click', () => this.openSheet());
+    $('#sheet').addEventListener('click', (event) => {
+      if (event.target.id === 'sheet') this.closeSheet();
+    });
+    $('#sheet-hint').addEventListener('click', () => {
+      this.closeSheet();
+      this.showHint();
+    });
+    $('#sheet-home').addEventListener('click', () => {
+      this.closeSheet();
       this.refreshPlayLabel();
       this.go('menu');
     });
+    for (const button of $$('[data-sheet-nav]')) {
+      button.addEventListener('click', () => {
+        this.closeSheet();
+        this.returnTo = 'table';
+        this.go(button.dataset.sheetNav);
+      });
+    }
 
     $('#chips').addEventListener('click', (event) => {
       const button = event.target.closest('.chip-btn');
@@ -232,9 +276,6 @@ class App {
 
     for (const button of $$('[data-move]')) {
       button.addEventListener('click', () => this.move(button.dataset.move));
-    }
-    for (const button of $$('[data-hint]')) {
-      button.addEventListener('click', () => this.showHint());
     }
     $('#btn-ins-yes').addEventListener('click', () => this.decideInsurance(true));
     $('#btn-ins-no').addEventListener('click', () => this.decideInsurance(false));
@@ -269,11 +310,22 @@ class App {
     for (const button of $$('[data-speed]')) {
       button.classList.toggle('on', button.dataset.speed === settings.speed);
     }
-    for (const button of $$('[data-hint]')) button.hidden = !settings.hints;
+  }
+
+  openSheet() {
+    this.sound.tap();
+    const hintable = !this.busy && this.settings.hints && ['player', 'insurance'].includes(this.game.phase);
+    $('#sheet-hint').hidden = !hintable;
+    $('#sheet').classList.add('active');
+  }
+
+  closeSheet() {
+    $('#sheet').classList.remove('active');
   }
 
   go(name) {
     if (name === 'stats') this.renderStats();
+    this.particles.setDensity({ menu: 52, table: 14 }[name] ?? 22);
     for (const screen of $$('.screen')) {
       screen.classList.toggle('active', screen.id === `screen-${name}`);
     }
@@ -457,14 +509,12 @@ class App {
   setBalance(value, animate = true) {
     const from = this.shownBalance;
     this.shownBalance = value;
-    if (animate) countTo(this.balanceEl, from, value, money);
-    else this.balanceEl.textContent = money(value);
-  }
-
-  updateShoeMeter() {
-    const { pos, cutAt } = this.game.state;
-    const left = Math.max(0, 1 - pos / cutAt);
-    $('#shoe-fill').style.transform = `scaleX(${left})`;
+    if (animate) {
+      countTo(this.balanceEl, from, value, money);
+      if (from !== value) pulseNumber(this.balanceEl);
+    } else {
+      this.balanceEl.textContent = money(value);
+    }
   }
 
   /* ---------- Bahis ---------- */
@@ -495,13 +545,12 @@ class App {
     const stack = this.ensureSpotStack();
     const target = this.point(stack);
     const start = this.point(source);
-    this.flyChip(value, start, { x: target.x, y: target.y - 26 }, 260).then(() => {
+    this.flyChip(value, start, { x: target.x, y: target.y - 26 }, 360).then(() => {
       // Fiş havadayken el dağıtılmış olabilir; yığın artık masaya aittir.
       if (this.spot.stack === stack) this.fillStack(stack, this.pendingBet);
       this.sound.chip();
       wobble(stack);
     });
-    $('#bet-hint').classList.add('gone');
   }
 
   ensureSpotStack() {
@@ -517,7 +566,6 @@ class App {
     this.setBalance(this.game.balance - amount, false);
     const stack = this.ensureSpotStack();
     this.fillStack(stack, amount);
-    $('#bet-hint').classList.toggle('gone', amount > 0);
     this.refreshControls();
   }
 
@@ -542,18 +590,18 @@ class App {
     const place = (point) => `translate(${point.x - size / 2}px,${point.y - size / 2}px)`;
     chip.style.transform = place(to);
     this.layer.appendChild(chip);
-    const lift = { x: (from.x + to.x) / 2, y: Math.min(from.y, to.y) - 34 };
+    const lift = { x: (from.x + to.x) / 2, y: Math.min(from.y, to.y) - 74 };
     await run(chip, [
-      { transform: `${place(from)} scale(1.1)`, opacity: 1 },
-      { transform: `${place(lift)} scale(1.1)`, offset: 0.55 },
-      { transform: `${place(to)} scale(1)`, opacity: 1 },
+      { transform: `${place(from)} rotate(0deg) scale(1.05)`, opacity: 0.9 },
+      { transform: `${place(lift)} rotate(200deg) scale(1.28)`, opacity: 1, offset: 0.55 },
+      { transform: `${place(to)} rotate(360deg) scale(1)`, opacity: 1 },
     ], ms, { delay, fill: 'backwards' });
     chip.remove();
   }
 
-  flyChips(amount, from, to, ms = 340) {
+  flyChips(amount, from, to, ms = 420) {
     const chips = chipBreakdown(amount).slice(-6);
-    return Promise.all(chips.map((value, i) => this.flyChip(value, from, to, ms, i * 50)));
+    return Promise.all(chips.map((value, i) => this.flyChip(value, from, to, ms, i * 75)));
   }
 
   /* ---------- Kontroller ---------- */
@@ -578,24 +626,30 @@ class App {
       for (const button of $$('.chip-btn')) {
         button.disabled = this.pendingBet + Number(button.dataset.value) > ceiling;
       }
-      $('#btn-clear').disabled = this.pendingBet === 0;
-      $('#btn-rebet').disabled = !game.canBet(this.lastBet);
+      // Yalnızca o anda işe yarayan bahis düğmeleri görünür.
+      const hasBet = this.pendingBet > 0;
+      const rebet = $('#btn-rebet');
+      $('#btn-clear').hidden = busy || !hasBet;
+      $('#btn-deal').hidden = busy || !hasBet;
       $('#btn-deal').disabled = !game.canBet(this.pendingBet);
+      rebet.hidden = busy || hasBet || !game.canBet(this.lastBet);
+      rebet.textContent = `Önceki · ${money(this.lastBet)}`;
     }
 
     const actions = game.availableActions();
     for (const button of $$('[data-move]')) {
-      button.disabled = busy || !actions[button.dataset.move];
+      const move = button.dataset.move;
+      button.disabled = busy || !actions[move];
+      if (phase === 'player' && !busy) button.hidden = !actions[move];
       button.classList.remove('suggested');
     }
-    for (const button of $$('[data-hint]')) button.disabled = busy;
 
     if (phase === 'insurance') {
       const natural = handValue(game.hands[0].cards).total === 21;
       const cost = money(game.insuranceCost);
       $('#insurance-text').innerHTML = natural
-        ? `Blackjack'in var. <b>Eşit para</b> alırsan bahsin bir katını kesin kazanırsın. (${cost})`
-        : `Krupiye As gösteriyor. <b>Sigorta</b> ister misin? Bedeli ${cost}, 2:1 öder.`;
+        ? `<b>Eşit para</b> alırsan kazancın kesin. Bedel ${cost}.`
+        : `<b>Sigorta</b> ister misin? Bedel ${cost}, 2:1 öder.`;
       const yes = $('#btn-ins-yes');
       yes.textContent = natural ? 'Eşit Para' : 'Sigorta';
       yes.disabled = busy || !game.canInsure();
@@ -639,10 +693,10 @@ class App {
     if (this.busy) return;
     this.busy = true;
     this.refreshControls();
-    const events = action();
-    this.recordIfSettled(events);
-    this.persist();
     try {
+      const events = action();
+      this.recordIfSettled(events);
+      this.persist();
       await this.play(events);
     } finally {
       this.busy = false;
@@ -691,10 +745,8 @@ class App {
     await this.clearTable();
     await this.play(events);
     $('#bet-spot').classList.remove('dim');
-    $('#bet-hint').classList.remove('gone');
     this.busy = false;
     this.setBalance(this.game.balance, false);
-    this.updateShoeMeter();
     if (this.checkBroke()) {
       this.refreshControls();
       return;
@@ -722,25 +774,32 @@ class App {
     this.persist();
     this.setPendingBet(0);
     this.setBalance(this.game.balance, true);
-    this.updateShoeMeter();
     this.checkBroke();
     this.refreshControls();
   }
 
   async clearTable() {
-    const { w } = this.cardSize();
+    const { w, h } = this.cardSize();
     const views = [...this.dealerView, ...this.handViews.flatMap((hand) => hand.cards)];
-    const sweep = `translate(${-w * 1.3}px,40px) rotate(-18deg) scale(.5)`;
+    const middle = this.table.clientWidth / 2 - w * 0.4;
+    const top = this.table.clientHeight * 0.42 - h * 0.4;
     for (const hand of this.handViews) {
       hand.tag.remove();
       hand.note.remove();
       hand.stack.remove();
     }
     this.dealerTotal.hidden = true;
-    await Promise.all(views.map(({ el }, i) => run(el, [
-      { transform: el.style.transform, opacity: 1 },
-      { transform: sweep, opacity: 0.4 },
-    ], 300, { delay: i * 18, fill: 'both', easing: 'ease-in' })));
+    // Kartlar ortada toplanır, sonra deste hâlinde yana süpürülür.
+    await Promise.all(views.map(({ el }, i) => {
+      const pile = `translate(${middle + (i % 5) * 1.5}px,${top - i}px) rotate(${-6 + (i % 3) * 3}deg) scale(.8)`;
+      const gone = `translate(${-w * 1.5}px,${top + 26}px) rotate(-26deg) scale(.62)`;
+      return run(el, [
+        { transform: el.style.transform, opacity: 1, easing: 'cubic-bezier(.3,.7,.3,1)' },
+        { transform: pile, opacity: 1, offset: 0.5 },
+        { transform: pile, opacity: 1, offset: 0.62, easing: 'cubic-bezier(.5,0,.8,.5)' },
+        { transform: gone, opacity: 0 },
+      ], 680, { delay: i * 22, fill: 'both', easing: 'linear' });
+    }));
     views.forEach(({ el }) => el.remove());
     this.dealerView = [];
     this.handViews = [];
@@ -752,14 +811,13 @@ class App {
     for (const event of events) {
       await this.playEvent(event);
     }
-    this.updateShoeMeter();
   }
 
   playEvent(event) {
     switch (event.type) {
       case 'deal': return this.onDeal(event);
       case 'reveal': return this.onReveal();
-      case 'peek': return this.onPeek(event);
+      case 'peek': return this.onPeek();
       case 'turn': return this.onTurn(event);
       case 'split': return this.onSplit(event);
       case 'double': return this.onDouble(event);
@@ -770,7 +828,7 @@ class App {
       case 'settle': return this.onSettle(event);
       case 'shuffle': return this.onShuffle();
       case 'cutCard':
-        showToast(this.toast, 'Kesme kartı çıktı. Bu elden sonra karıştırılacak.', 2600);
+        showToast(this.toast, 'Kesme kartı çıktı', 1800);
         return undefined;
       case 'insuranceOffer':
         return wait(120);
@@ -789,13 +847,13 @@ class App {
 
     this.sound.card();
     this.sound.buzz(5);
-    const motion = moveTo(view.el, view.target, 380, { ...landing, from: this.shoeTransform() });
-    const turned = faceDown ? null : flip(view.el.inner, 330);
-    await wait(250);
+    const motion = dealIn(view.el, this.shoeTransform(), view.target);
+    const turned = faceDown ? null : flip(view.el.inner, 400);
+    await wait(320);
     if (owner) this.updateHandTotal(owner, true);
     else this.updateDealerTotal(true);
     await Promise.all([motion, turned]);
-    await wait(30);
+    await wait(90); // kartlar arasındaki ritim
   }
 
   updateDealerTotal(animate) {
@@ -833,12 +891,12 @@ class App {
     view.faceDown = false;
     view.el.setAttribute('aria-label', `${SUIT_NAMES[view.card.suit]} ${view.card.rank}`);
     this.sound.flip();
-    await flip(view.el.inner, 460);
+    await flip(view.el.inner);
     this.updateDealerTotal(true);
     await wait(220);
   }
 
-  async onPeek({ blackjack }) {
+  async onPeek() {
     const view = this.dealerView[1];
     if (!view) return;
     const base = view.el.style.transform;
@@ -848,7 +906,6 @@ class App {
       { transform: `${base} translateY(-7px) rotate(-3deg)`, offset: 0.6 },
       { transform: base },
     ], 620);
-    if (!blackjack) showToast(this.toast, 'Krupiyede blackjack yok', 1300);
   }
 
   async onTurn({ hand }) {
@@ -973,8 +1030,20 @@ class App {
           wobble(view.stack);
         }));
       }
-      if (lostAll) view.tag.classList.add('lost');
-      if (result.outcome === 'win' || result.outcome === 'blackjack') view.tag.classList.add('good');
+      if (lostAll) {
+        view.tag.classList.add('lost');
+        if (result.outcome === 'lose') {
+          for (const card of view.cards) {
+            card.el.classList.add('bust-card');
+            sinkCard(card.el);
+          }
+        }
+      }
+      if (result.outcome === 'win' || result.outcome === 'blackjack') {
+        view.tag.classList.add('good');
+        tick(view.tag);
+        view.cards.forEach((card, c) => liftCard(card.el, c * 70));
+      }
       if (multi && result.outcome !== 'bust') {
         this.setNote(view, OUTCOME_NOTE[result.outcome], result.net < 0);
       }
@@ -1015,6 +1084,8 @@ class App {
       return;
     }
     if (net > 0) {
+      const rect = this.banner.getBoundingClientRect();
+      this.particles.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 44);
       this.sound.win();
       this.sound.buzz(20);
       showBanner(this.banner, { title: 'KAZANDIN', detail });
@@ -1044,7 +1115,6 @@ class App {
     const blank = { rank: 'A', suit: 'S' };
     const cards = [];
     this.sound.shuffle();
-    showToast(this.toast, 'Ayakkabı karıştırılıyor', 1700);
     for (let i = 0; i < 12; i += 1) {
       const el = makeCard(blank, true);
       el.style.marginLeft = `${-w / 2}px`;

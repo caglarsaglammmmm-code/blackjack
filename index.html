@@ -27,21 +27,28 @@
 
   <div id="app">
     <!-- AÇILIŞ -->
-    <section class="screen" id="screen-menu" aria-label="Ana menü">
+    <section class="screen pre" id="screen-menu" aria-label="Ana menü">
+      <div class="menu-bg" aria-hidden="true">
+        <div class="rays"></div>
+        <div class="ghost g1"><svg><use href="#suit-S"/></svg></div>
+        <div class="ghost g2"><svg><use href="#suit-H"/></svg></div>
+        <div class="ghost g3"><svg><use href="#suit-D"/></svg></div>
+        <div class="ghost g4"><svg><use href="#suit-C"/></svg></div>
+        <div class="ghost g5"><svg><use href="#suit-S"/></svg></div>
+        <div class="ghost g6"><svg><use href="#suit-H"/></svg></div>
+      </div>
       <div class="logo">
-        <span class="logo-rule"></span>
-        <span class="logo-21">21</span>
-        <span class="logo-name">BLACKJACK</span>
-        <span class="logo-tag">ÖZEL SALON</span>
-        <span class="logo-rule"></span>
+        <span class="logo-rule rise" style="--i:0"></span>
+        <span class="logo-mark rise" style="--i:1"><span class="logo-halo"></span><span class="logo-21">21</span><span class="sheen" aria-hidden="true">21</span></span>
+        <span class="logo-name rise" style="--i:3">BLACKJACK</span>
+        <span class="logo-rule rise" style="--i:4"></span>
       </div>
       <nav class="menu">
-        <button class="btn btn-primary" data-nav="table" id="btn-play">Oyna</button>
-        <button class="btn" data-nav="stats">İstatistikler</button>
-        <button class="btn" data-nav="settings">Ayarlar</button>
-        <button class="btn" data-nav="how">Nasıl Oynanır</button>
+        <div class="rise" style="--i:5"><button class="btn-menu primary" id="btn-play" data-nav="table"><i class="gem l"></i><svg class="ico solid" aria-hidden="true"><use href="#suit-S"/></svg><span><b id="btn-play-label">Oyna</b></span><i class="gem r"></i></button></div>
+        <div class="rise" style="--i:6"><button class="btn-menu " data-nav="stats"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg><span>İstatistikler</span><i class="gem r"></i></button></div>
+        <div class="rise" style="--i:7"><button class="btn-menu " data-nav="settings"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></svg><span>Ayarlar</span><i class="gem r"></i></button></div>
+        <div class="rise" style="--i:8"><button class="btn-menu " data-nav="how"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.6 3.5 5v14c3.5-.4 6.5 0 8.5 1.5 2-1.5 5-1.9 8.5-1.5V5C17 4.6 14 5 12 6.5zM12 6.5v14"/></svg><span>Nasıl Oynanır</span><i class="gem r"></i></button></div>
       </nav>
-      <p class="menu-note">Yalnızca eğlence içindir. Gerçek para kullanılmaz.</p>
     </section>
 
     <!-- OYUN MASASI -->
@@ -50,36 +57,27 @@
         <button class="icon-btn" id="btn-menu" aria-label="Menü">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
         </button>
-        <div class="balance">
-          <span class="balance-label">BAKİYE</span>
-          <span class="balance-value" id="balance" aria-live="polite">5.000</span>
-        </div>
-        <div class="shoe-meter" aria-hidden="true"><span id="shoe-fill"></span></div>
+        <div class="balance" aria-label="Bakiye"><span class="balance-value" id="balance" aria-live="polite">5.000</span></div>
+        <span></span>
       </header>
 
       <div class="table" id="table">
         <div class="felt" aria-hidden="true">
           <svg viewBox="0 0 400 110" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <path id="arc-main" d="M 34 18 Q 200 92 366 18"/>
-              <path id="arc-sub" d="M 66 44 Q 200 106 334 44"/>
-            </defs>
-            <path d="M 14 12 Q 200 104 386 12" class="felt-line"/>
-            <path d="M 56 54 Q 200 122 344 54" class="felt-line thin"/>
+            <defs><path id="arc-main" d="M 34 26 Q 200 96 366 26"/></defs>
+            <path d="M 14 20 Q 200 112 386 20" class="felt-line"/>
             <text class="felt-text"><textPath href="#arc-main" startOffset="50%" text-anchor="middle">BLACKJACK PAYS 3 TO 2</textPath></text>
-            <text class="felt-sub"><textPath href="#arc-sub" startOffset="50%" text-anchor="middle">KRUPİYE SOFT 17'DE DURUR · SİGORTA 2:1</textPath></text>
           </svg>
         </div>
 
         <div class="shoe" id="shoe" aria-hidden="true"><i></i><i></i><i></i></div>
 
         <div class="zone" id="dealer-zone">
-          <span class="zone-label">KRUPİYE</span>
           <span class="total" id="dealer-total" hidden></span>
         </div>
         <div class="spacer"></div>
         <div class="zone" id="player-zone">
-          <div class="bet-spot" id="bet-spot"><span id="bet-hint">BAHİS</span></div>
+          <div class="bet-spot" id="bet-spot"></div>
         </div>
 
         <div class="layer" id="layer"></div>
@@ -93,7 +91,7 @@
         <!-- Bahis -->
         <div class="panel" id="panel-bet">
           <div class="chips" id="chips"></div>
-          <div class="row">
+          <div class="row row-extra">
             <button class="btn btn-sm" id="btn-clear">Temizle</button>
             <button class="btn btn-sm" id="btn-rebet">Önceki Bahis</button>
             <button class="btn btn-sm btn-primary" id="btn-deal">Dağıt</button>
@@ -105,18 +103,16 @@
             <button class="btn btn-action" data-move="hit">Kart</button>
             <button class="btn btn-action" data-move="stand">Dur</button>
           </div>
-          <div class="row">
+          <div class="row row-extra">
             <button class="btn btn-sm" data-move="double">Double</button>
             <button class="btn btn-sm" data-move="split">Split</button>
-            <button class="btn btn-sm" data-move="surrender">Teslim</button>
-            <button class="btn btn-sm btn-hint" data-hint="play">İpucu</button>
+            <button class="btn btn-sm btn-ghost" data-move="surrender">Teslim</button>
           </div>
         </div>
         <!-- Sigorta -->
         <div class="panel" id="panel-insurance">
           <p class="panel-text" id="insurance-text"></p>
           <div class="row">
-            <button class="btn btn-sm btn-hint" data-hint="insurance">İpucu</button>
             <button class="btn" id="btn-ins-no">Hayır</button>
             <button class="btn btn-primary" id="btn-ins-yes">Sigorta</button>
           </div>
@@ -133,13 +129,13 @@
 
     <!-- İSTATİSTİK -->
     <section class="screen page" id="screen-stats" aria-label="İstatistikler">
-      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>İstatistikler</h1></header>
+      <header class="page-head"><button class="icon-btn" data-back aria-label="Geri">‹</button><h1>İstatistikler</h1></header>
       <div class="page-body" id="stats-body"></div>
     </section>
 
     <!-- AYARLAR -->
     <section class="screen page" id="screen-settings" aria-label="Ayarlar">
-      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>Ayarlar</h1></header>
+      <header class="page-head"><button class="icon-btn" data-back aria-label="Geri">‹</button><h1>Ayarlar</h1></header>
       <div class="page-body">
         <label class="setting"><span>Ses</span><input type="checkbox" class="switch" id="set-sound"></label>
         <label class="setting"><span>Titreşim</span><input type="checkbox" class="switch" id="set-vibration"></label>
@@ -157,7 +153,7 @@
 
     <!-- NASIL OYNANIR -->
     <section class="screen page" id="screen-how" aria-label="Nasıl Oynanır">
-      <header class="page-head"><button class="icon-btn" data-nav="menu" aria-label="Geri">‹</button><h1>Nasıl Oynanır</h1></header>
+      <header class="page-head"><button class="icon-btn" data-back aria-label="Geri">‹</button><h1>Nasıl Oynanır</h1></header>
       <div class="page-body prose">
         <h2>Amaç</h2>
         <p>Toplamı 21'i geçmeden krupiyeden yüksek olmak. 21'i geçen el <b>bust</b> olur ve hemen kaybeder.</p>
@@ -184,6 +180,9 @@
         <p>Açık kart As ise bahsin yarısıyla sigorta alabilirsin; krupiyede blackjack varsa 2:1 öder. Elinde blackjack varken sigorta <b>eşit para</b> demektir: krupiye ne açarsa açsın bahsin bir katını kazanırsın.</p>
         <h2>Ayakkabı</h2>
         <p>6 deste kullanılır. Kesme kartı yaklaşık %75'te çıkar, o el bitince ayakkabı yeniden karıştırılır.</p>
+        <h2>İpucu</h2>
+        <p>Oyun sırasında sol üstteki menüden temel stratejinin önerisini görebilirsin.</p>
+        <p class="page-note">Yalnızca eğlence içindir. Gerçek para kullanılmaz.</p>
       </div>
     </section>
   </div>
@@ -191,12 +190,28 @@
   <canvas id="fx" aria-hidden="true"></canvas>
   <div class="edge-glow" id="edge-glow" aria-hidden="true"></div>
 
+  <div class="sheet" id="sheet" role="dialog" aria-label="Oyun menüsü">
+    <div class="sheet-box">
+      <button class="btn-menu primary" id="sheet-hint"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 21h4M12 3a6.5 6.5 0 0 0-3.6 11.9c.6.4.6 1.1.6 2.6h6c0-1.5 0-2.2.6-2.6A6.5 6.5 0 0 0 12 3z"/></svg><span>İpucu</span><i class="gem r"></i></button>
+      <button class="btn-menu " data-sheet-nav="stats"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg><span>İstatistikler</span><i class="gem r"></i></button>
+      <button class="btn-menu " data-sheet-nav="settings"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></svg><span>Ayarlar</span><i class="gem r"></i></button>
+      <button class="btn-menu " data-sheet-nav="how"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.6 3.5 5v14c3.5-.4 6.5 0 8.5 1.5 2-1.5 5-1.9 8.5-1.5V5C17 4.6 14 5 12 6.5zM12 6.5v14"/></svg><span>Nasıl Oynanır</span><i class="gem r"></i></button>
+      <button class="btn-menu " id="sheet-home"><i class="gem l"></i><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6.5 9.5V20h11V9.5"/></svg><span>Ana Menü</span><i class="gem r"></i></button>
+    </div>
+  </div>
+
   <div class="dialog" id="dialog-broke" role="alertdialog" aria-labelledby="broke-title">
     <div class="dialog-box">
       <h2 id="broke-title">Bakiyen Bitti</h2>
       <p>Salon sana yeni bir başlangıç sunuyor. İstatistiklerin korunur.</p>
       <button class="btn btn-primary" id="btn-restart">Yeniden Başla</button>
     </div>
+  </div>
+
+  <div class="intro" id="intro" role="status" aria-label="Çağlar Sağlam bu oyuna şaplağını vurdu">
+    <span class="intro-line"></span>
+    <p class="intro-text" aria-hidden="true"><span style="--i:0">Çağlar</span> <span style="--i:1">Sağlam</span> <span style="--i:2">bu</span> <span style="--i:3">oyuna</span> <span style="--i:4">şaplağını</span> <span style="--i:5">vurdu</span></p>
+    <span class="intro-line"></span>
   </div>
 
   <div class="rotate-note">Lütfen telefonu dik tut</div>
